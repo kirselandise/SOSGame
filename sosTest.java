@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class sosTest {
 
 	//Declaration of Variables
-    private Board board;
+    private General board;
     private Player bluePlayer;
     private Player redPlayer;
     private GUI gui;
@@ -30,12 +30,12 @@ public class sosTest {
     @Test
     void testStartGameWithInvalidBoardSize() {
     	// Test with a valid board size (lower bound)
-        gui.getBoardSize().setText("3");
+        GUI.getBoardSize().setText("3");
         gui.getStartGame().doClick();
         assertNull(capturedMessage); // Expect no error message
         
         // Test with an invalid board size (too small)
-        gui.getBoardSize().setText("2");
+        GUI.getBoardSize().setText("2");
         gui.getStartGame().doClick();
         assertEquals("Invalid board size. Please enter a number between 3 and 20.", capturedMessage);
 
@@ -43,7 +43,7 @@ public class sosTest {
         capturedMessage = null;
 
         // Test with an invalid board size (too large)
-        gui.getBoardSize().setText("21");
+        GUI.getBoardSize().setText("21");
         gui.getStartGame().doClick();
         assertEquals("Invalid board size. Please enter a number between 3 and 20.", capturedMessage);
     }
@@ -52,10 +52,10 @@ public class sosTest {
     //Tests for correct board size and type
     @Test
     void correctSizeType() {
-        board = new Board(8, GUI.Type.SIMPLE);
+        board = new General(8, GUI.Type.SIMPLE);
         assertEquals(8, board.getSize());
         assertEquals(GUI.Type.SIMPLE, board.getType());
-        board = new Board(15, GUI.Type.GENERAL);
+        board = new General(15, GUI.Type.GENERAL);
         assertEquals(15, board.getSize());
         assertEquals(GUI.Type.GENERAL, board.getType());
     }
@@ -63,7 +63,7 @@ public class sosTest {
     //Tests correct player, location, and letter
     @Test
     void correctPlayerMoves() {
-        board = new Board(5, GUI.Type.SIMPLE);
+        board = new General(5, GUI.Type.SIMPLE);
         
         assertTrue(board.play(0, 0, 'S', bluePlayer));
         assertEquals('S', board.getCell(0, 0));
@@ -78,23 +78,47 @@ public class sosTest {
     //Tests valid and invalid locations
     @Test
     void validMoves() {
-        board = new Board(5, GUI.Type.SIMPLE);
+        board = new General(5, GUI.Type.SIMPLE);
 
         assertTrue(board.play(0, 0, 'S', bluePlayer));
         assertFalse(board.play(0, 0, 'O', redPlayer));
         assertTrue(board.play(1, 1, 'O', redPlayer));
         assertFalse(board.play(5, 5, 'S', bluePlayer));
     }
-
-    //Tests for full board after making board full
+    
+    //Tests a full board of scores inside of a GENERAL game
     @Test
-    void checkFull() {
-        board = new Board(3, GUI.Type.SIMPLE);
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                board.play(i, j, 'S', (i + j) % 2 == 0 ? bluePlayer : redPlayer);
-            }
-        }
-        assertTrue(board.full());
+    void checkGeneral() {
+    	//Actually equivalent to board size 3 cause size=size-1
+        board = new General(4, GUI.Type.GENERAL);
+
+        assertTrue(board.play(0, 0, 'S', redPlayer));
+        assertTrue(board.play(0, 1, 'O', redPlayer));
+        assertTrue(board.play(0, 2, 'S', redPlayer));
+        assertTrue(board.play(1, 0, 'S', redPlayer));
+        assertTrue(board.play(1, 1, 'S', redPlayer));
+        assertTrue(board.play(1, 2, 'S', redPlayer));
+        assertTrue(board.play(2, 0, 'S', redPlayer));
+        assertTrue(board.play(2, 1, 'S', redPlayer));
+        assertTrue(board.play(2, 2, 'S', redPlayer));
+        
+        assertEquals(0, bluePlayer.getScore());
+        assertEquals(1, redPlayer.getScore());
+        assertTrue(redPlayer.getScore()>bluePlayer.getScore());
+    }
+
+    //Tests that a SIMPLE game ends early when SOS is made and checks scores
+    @Test
+    void checkSimple() {
+        board = new General(5, GUI.Type.SIMPLE);
+        
+        assertTrue(board.play(0, 0, 'S', bluePlayer));
+        assertTrue(board.play(0, 1, 'O', bluePlayer));
+        assertTrue(board.play(0, 2, 'S', bluePlayer));
+        
+        assertTrue(Simple.gameOver(redPlayer, bluePlayer));
+        assertEquals(1, bluePlayer.getScore());
+        assertEquals(0, redPlayer.getScore());
+        assertTrue(bluePlayer.getScore()>redPlayer.getScore());
     }
 }

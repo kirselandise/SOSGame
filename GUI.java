@@ -9,10 +9,11 @@ import java.awt.*;
 
 public class GUI extends JFrame {
 	//Declaration of variables
-    private JLabel[][] labels;
+    static JLabel[][] labels;
     private JLabel status;
-    private Player blue, red;
-    private Board board;
+    Player blue;
+	Player red;
+    General board;
     private boolean blueTurn = true;
 
     private JRadioButton blueS, blueO, redS, redO; // Red and Blue's move buttons
@@ -20,11 +21,13 @@ public class GUI extends JFrame {
 
     private JRadioButton simpleMode, generalMode;
     private ButtonGroup modeGroup; //Defines group that holds the game modes
-    private JTextField boardSize; //Determines board size by user input
+    private static JTextField boardSize; //Determines board size by user input
     
     private JButton startGame; //Starts game with appropriate modifiers (board size and game type)
     private JButton exitGame; //Exits application, after prompting user, are you sure
     private JButton startOver; //Sends you back to the start game screen, 
+    
+    private Type gameType;
     
     // Enumeration holding the game modes
     public enum Type {
@@ -116,8 +119,8 @@ public class GUI extends JFrame {
         red = new Player("Red");
 
         //Selected type
-        Type gameType = simpleMode.isSelected() ? Type.SIMPLE : Type.GENERAL;
-        board = new Board(size, gameType);
+        gameType = simpleMode.isSelected() ? Type.SIMPLE : Type.GENERAL;
+        board = new General(size, gameType);
 
         //Selected size
         newBoard(size);
@@ -222,26 +225,44 @@ public class GUI extends JFrame {
 
         if (board.play(row, col, move, currentPlayer)) {
             labels[row][col].setText(String.valueOf(move));
+            //Unused code that color coded who's turn it was
+			/*
+			 * if (currentPlayer == blue) { labels[row][col].setForeground(Color.BLUE); }
+			 * else { labels[row][col].setForeground(Color.RED); }
+			 */
+            
 
             if (board.full()) {
                 declareWinner();
-            } else {
+            } 
+            else if (gameType == Type.SIMPLE) {
+            	if (Simple.gameOver(red, blue)) {
+            		declareWinner();
+            	}
+            	else {
+            		blueTurn = !blueTurn;
+                    status.setText("Current turn: " + (blueTurn ? "Blue" : "Red")); //Updates status
+            	}
+            }
+            else {
                 blueTurn = !blueTurn;
                 status.setText("Current turn: " + (blueTurn ? "Blue" : "Red")); //Updates status
             }
+            
         } else {
             JOptionPane.showMessageDialog(this, "Invalid move, try again."); //Does not allow repeat moves (moves in a taken spot)
         }
     }
 
     //Not implemented yet. Relies on determining logic from Player and Board classes in a later Sprint
-    private void declareWinner() {
+    void declareWinner() {
         if (blue.getScore() > red.getScore()) {
-            JOptionPane.showMessageDialog(this, "Blue wins with score: " + blue.getScore());
+        	showErrorMessage("Blue wins with score: " + blue.getScore());
         } else if (red.getScore() > blue.getScore()) {
-            JOptionPane.showMessageDialog(this, "Red wins with score: " + red.getScore());
+        	showErrorMessage("Red wins with score: " + red.getScore());
         } else {
-            JOptionPane.showMessageDialog(this, "It's a tie!");
+        	showErrorMessage("It's a tie!");
+            
         }
 
         int restart = JOptionPane.showConfirmDialog(this, "Do you want to play again?", "Restart", JOptionPane.YES_NO_OPTION);
@@ -258,8 +279,13 @@ public class GUI extends JFrame {
 
 
     //Getters and Setters created by Eclipse for the size test
-	public JTextField getBoardSize() {
+	public static JTextField getBoardSize() {
 		return boardSize;
+	}
+	
+	public static int boardSize() {
+		int gameSize = Integer.parseInt(getBoardSize().getText());
+		return gameSize;
 	}
 
 
