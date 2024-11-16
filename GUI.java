@@ -13,7 +13,7 @@ public class GUI extends JFrame {
     private JLabel status;
     Player blue;
 	Player red;
-    General board;
+    Game board;
     private boolean blueTurn = true;
 
     private JRadioButton blueS, blueO, redS, redO; // Red and Blue's move buttons
@@ -22,6 +22,8 @@ public class GUI extends JFrame {
     private JRadioButton simpleMode, generalMode;
     private ButtonGroup modeGroup; //Defines group that holds the game modes
     private static JTextField boardSize; //Determines board size by user input
+    private JRadioButton blueHuman, blueComputer, redHuman, redComputer;
+    private ButtonGroup blueOpponentGroup, redOpponentGroup;
     
     private JButton startGame; //Starts game with appropriate modifiers (board size and game type)
     private JButton exitGame; //Exits application, after prompting user, are you sure
@@ -49,7 +51,7 @@ public class GUI extends JFrame {
 
         //Creates the window for the application
         setTitle("SOS Game");
-        setSize(300, 200);
+        setSize(300, 250);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -65,6 +67,20 @@ public class GUI extends JFrame {
         modeGroup = new ButtonGroup();
         modeGroup.add(simpleMode);
         modeGroup.add(generalMode);
+        
+        //Creares buttons for computer and human opponents
+        blueHuman = new JRadioButton("Blue Human", true);
+        blueComputer = new JRadioButton("Blue Computer");
+        redHuman = new JRadioButton("Red Human", true);
+        redComputer = new JRadioButton("Red Computer");
+
+        blueOpponentGroup = new ButtonGroup();
+        blueOpponentGroup.add(blueHuman);
+        blueOpponentGroup.add(blueComputer);
+
+        redOpponentGroup = new ButtonGroup();
+        redOpponentGroup.add(redHuman);
+        redOpponentGroup.add(redComputer);
 
         //Allows player to select board size
         JLabel boardSizeLabel = new JLabel("Board size: ");
@@ -96,6 +112,16 @@ public class GUI extends JFrame {
         mainPanel.add(getStartGame(), gbc);
         gbc.gridx = 1;
         mainPanel.add(exitGame, gbc);
+        gbc.gridx = 0;
+        gbc.gridy++;
+        mainPanel.add(blueHuman, gbc);
+        gbc.gridx = 1;
+        mainPanel.add(blueComputer, gbc);
+        gbc.gridx = 0;
+        gbc.gridy++;
+        mainPanel.add(redHuman, gbc);
+        gbc.gridx = 1;
+        mainPanel.add(redComputer, gbc);
 
         setVisible(true); //Necessary for showing GUI
     }
@@ -114,13 +140,22 @@ public class GUI extends JFrame {
             return;
         }
 
-        //Old initialization of the Player class. Will be used for scoring in later sprints
-        blue = new Player("Blue");
-        red = new Player("Red");
+        //Includes computer options as well as human options
+        if (blueHuman.isSelected()) {
+            blue = new Human("Blue");
+        } else {
+            blue = new Computer("Blue");
+        }
+
+        if (redHuman.isSelected()) {
+            red = new Human("Red");
+        } else {
+            red = new Computer("Red");
+        }
 
         //Selected type
         gameType = simpleMode.isSelected() ? Type.SIMPLE : Type.GENERAL;
-        board = new General(size, gameType);
+        board = new Game(size, gameType);
 
         //Selected size
         newBoard(size);
@@ -218,40 +253,45 @@ public class GUI extends JFrame {
         }
     }
 
-    //Determines what happens if the grid is clicked
+    //Determines what happens if the grid is clicked, altered to utilize different players
     private void moveMade(int row, int col) {
-        Player currentPlayer = blueTurn ? blue : red; //Places move as that player
-        char move = blueTurn ? (blueS.isSelected() ? 'S' : 'O') : (redS.isSelected() ? 'S' : 'O'); //Places selected 's' or 'o'
-
-        if (board.play(row, col, move, currentPlayer)) {
-            labels[row][col].setText(String.valueOf(move));
-            //Unused code that color coded who's turn it was
-			/*
-			 * if (currentPlayer == blue) { labels[row][col].setForeground(Color.BLUE); }
-			 * else { labels[row][col].setForeground(Color.RED); }
-			 */
-            
-
-            if (board.full()) {
-                declareWinner();
-            } 
-            else if (gameType == Type.SIMPLE) {
-            	if (Simple.gameOver(red, blue)) {
-            		declareWinner();
-            	}
-            	else {
-            		blueTurn = !blueTurn;
-                    status.setText("Current turn: " + (blueTurn ? "Blue" : "Red")); //Updates status
-            	}
-            }
-            else {
-                blueTurn = !blueTurn;
-                status.setText("Current turn: " + (blueTurn ? "Blue" : "Red")); //Updates status
-            }
-            
+        Player currentPlayer = blueTurn ? blue : red;
+        char selectedMove = blueTurn ? 
+            (blueS.isSelected() ? 'S' : 'O') : 
+            (redS.isSelected() ? 'S' : 'O');
+        int[] move = currentPlayer.makeMove(board, row, col, selectedMove);
+        if (currentPlayer.executeMove(board, move, labels)) {
+            checkEnd();
         } else {
-            JOptionPane.showMessageDialog(this, "Invalid move, try again."); //Does not allow repeat moves (moves in a taken spot)
+            invalidMove();
         }
+    }
+    
+    //These three methods were added to keep moveMade smaller
+    void invalidMove() {
+    	JOptionPane.showMessageDialog(this, "Invalid move, try again."); //Does not allow repeat moves (moves in a taken spot)
+    }
+    
+    void checkEnd() {
+    	if (board.full()) {
+            declareWinner();
+        } 
+        else if (gameType == Type.SIMPLE) {
+        	if (Simple.gameOver(red, blue)) {
+        		declareWinner();
+        	}
+        	else {
+        		turnChange();
+        	}
+        }
+        else {
+        	turnChange();
+        }
+    }
+    
+    void turnChange() {
+    	blueTurn = !blueTurn;
+        status.setText("Current turn: " + (blueTurn ? "Blue" : "Red")); //Updates status
     }
 
     //Not implemented yet. Relies on determining logic from Player and Board classes in a later Sprint

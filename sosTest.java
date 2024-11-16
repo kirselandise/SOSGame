@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class sosTest {
 
 	//Declaration of Variables
-    private General board;
+    private Game board;
     private Player bluePlayer;
     private Player redPlayer;
     private GUI gui;
@@ -16,8 +16,8 @@ public class sosTest {
     //Sets up Players. Also sets up GUI, needed for the chat GPT code, not exactly certain why
     @BeforeEach
     void setUp() {
-        bluePlayer = new Player("Blue");
-        redPlayer = new Player("Red");
+        bluePlayer = new Human("Blue");
+        redPlayer = new Human("Red");
         gui = new GUI() {
             @Override
             protected void showErrorMessage(String message) {
@@ -52,10 +52,10 @@ public class sosTest {
     //Tests for correct board size and type
     @Test
     void correctSizeType() {
-        board = new General(8, GUI.Type.SIMPLE);
+        board = new Game(8, GUI.Type.SIMPLE);
         assertEquals(8, board.getSize());
         assertEquals(GUI.Type.SIMPLE, board.getType());
-        board = new General(15, GUI.Type.GENERAL);
+        board = new Game(15, GUI.Type.GENERAL);
         assertEquals(15, board.getSize());
         assertEquals(GUI.Type.GENERAL, board.getType());
     }
@@ -63,7 +63,7 @@ public class sosTest {
     //Tests correct player, location, and letter
     @Test
     void correctPlayerMoves() {
-        board = new General(5, GUI.Type.SIMPLE);
+        board = new Game(5, GUI.Type.SIMPLE);
         
         assertTrue(board.play(0, 0, 'S', bluePlayer));
         assertEquals('S', board.getCell(0, 0));
@@ -78,7 +78,7 @@ public class sosTest {
     //Tests valid and invalid locations
     @Test
     void validMoves() {
-        board = new General(5, GUI.Type.SIMPLE);
+        board = new Game(5, GUI.Type.SIMPLE);
 
         assertTrue(board.play(0, 0, 'S', bluePlayer));
         assertFalse(board.play(0, 0, 'O', redPlayer));
@@ -90,7 +90,7 @@ public class sosTest {
     @Test
     void checkGeneral() {
     	//Actually equivalent to board size 3 cause size=size-1
-        board = new General(4, GUI.Type.GENERAL);
+        board = new Game(4, GUI.Type.GENERAL);
 
         assertTrue(board.play(0, 0, 'S', redPlayer));
         assertTrue(board.play(0, 1, 'O', redPlayer));
@@ -110,7 +110,7 @@ public class sosTest {
     //Tests that a SIMPLE game ends early when SOS is made and checks scores
     @Test
     void checkSimple() {
-        board = new General(5, GUI.Type.SIMPLE);
+        board = new Game(5, GUI.Type.SIMPLE);
         
         assertTrue(board.play(0, 0, 'S', bluePlayer));
         assertTrue(board.play(0, 1, 'O', bluePlayer));
